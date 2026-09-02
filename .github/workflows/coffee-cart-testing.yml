@@ -27,7 +27,9 @@ jobs:
           workflow_conclusion: completed
           name: _site
           path: allure_report
+          if_no_artifact_found: warn
       - name: Upload allure history artifact
+        if: hashFiles('allure_report/history') != ''
         uses: actions/upload-artifact@v4
         with:
           name: history
@@ -47,11 +49,8 @@ jobs:
 
       - name: Copy allure history to report location
         run: |
-          mkdir $PWD/allure_results
-          cp -r history $PWD/allure_results
-
-      - name: Set up Docker
-        uses: docker/setup-docker-action@v4.3.0
+          mkdir -p $PWD/allure_results
+          if [ -d history ]; then cp -r history $PWD/allure_results; fi
 
       - name: Build Docker image
         run: docker build -t e2e-tests .
