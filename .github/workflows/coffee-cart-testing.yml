@@ -13,22 +13,52 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 jobs:
+  download-allure-history:
+    name: Download Allure history
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download _site artifact from previous run
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: coffee-cart-testing.yml
+          workflow_conclusion: completed
+          name: _site
+          path: allure_report
+      - name: Upload allure history artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: history
+          path: allure_report/history
+
   e2e-testing:
     name: Run e2e tests
+    needs: download-allure-history
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
 
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Copy allure history to report location
+        run: |
+          mkdir $PWD/allure_results
+          cp -r history $PWD/allure_results
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4.3.0
+
       - name: Build Docker image
         run: docker build -t e2e-tests .
 
       - name: Run e2e tests
         run: |
-          docker run -v $PWD/allure_results:/allure_results e2e-tests; ls $PWD/allure_results/
+          docker run -v $PWD/allure_results:/allure_results e2e-tests
 
       - name: Upload Allure Results as Artifact
         if: always() && !cancelled()
@@ -80,3 +110,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Show Report Link
+        run: echo <YOUR_LINK>
