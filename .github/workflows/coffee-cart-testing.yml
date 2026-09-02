@@ -111,4 +111,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
       - name: Show Report Link
-        run: echo <YOUR_LINK>
+        run: echo "https://boda4ek888.github.io/qa_pw_coffee_cart_github_actions/"
